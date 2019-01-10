@@ -19,13 +19,16 @@ $ node index.js
 
 URL : http://localhost:3000/authentication/createuser
 
-Body params : {
-              "firstname": "test",
-              "lastname" : "data",
-              "username" : "testdata",
-              "email"    : "testdata@example.com",
-              "password" : "test12345678"
-              }
+Body params : 
+``` r
+{
+"firstname": "test",
+"lastname" : "data",
+"username" : "testdata",
+"email"    : "testdata@example.com",
+"password" : "test12345678"
+} 
+```
 
 * Step 5 : To retrieve the created accounts create a get method with the following URL and pass the email or username(unique value of json) in query params ,
 
@@ -35,7 +38,10 @@ URL : http://localhost:3000/authentication/getuser/?email=testdata@example.com o
 
 URL : http://localhost:3000/authenticate/user
 
-bodyparams : {
+bodyparams : 
+``` r 
+{
 "username" : "testdata",
 "password" : "test12345678"
 }
+```
