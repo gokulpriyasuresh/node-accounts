@@ -30,3 +30,12 @@ Body params : {
 * Step 5 : To retrieve the created accounts create a get method with the following URL and pass the email or username(unique value of json) in query params ,
 
 URL : http://localhost:3000/authentication/getuser/?email=testdata@example.com or http://localhost:3000/authentication/getuser/?username=testdata or http://localhost:3000/authentication/getuser/
+
+* Step 6 : To authenticate the user and generate web token create a post method with the following URL and body params,
+
+URL : http://localhost:3000/authenticate/user
+
+bodyparams : {
+"username" : "testdata",
+"password" : "test12345678"
+}
