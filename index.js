@@ -68,7 +68,11 @@ var nameSchema = schema({
         description: "required and must be a string",
 
     },
-});
+},
+    {
+        versionKey: false // You should be aware of the outcome after set to false
+    }
+    );
 //Validations
  nameSchema.plugin(uniqueValidator);
  var validator = new Validator(nameSchema);
@@ -113,28 +117,157 @@ app.get("/authentication/getuser/",function(req,res){
     var limitdata = req.query.limit ? JSON.parse(req.query.limit):"";
     var skipdata = req.query.skip ? JSON.parse(req.query.skip) : "";
     if(req.query.email){
-        User.find({email:req.query.email},function(err,data){
-            if(err)
+        User.findOne({email:req.query.email},function(err,data){
+            if(err) {
                 res.send(err);
-            else
-                res.json(data[0])
+            }
+            else {
+                var result = data;
+                if (result) {
+                    res.json(result)
+                } else {
+                    res.json({
+                        message: 'Records not found',
+                    });
+                }
+            }
         });
     }else if(req.query.username){
-        User.find({username:req.query.username},function(err,data){
-            if(err)
+        User.findOne({username:req.query.username},function(err,data){
+            if(err) {
                 res.send(err);
-            else
-                res.json(data)
+            }
+            else {
+                var result = data;
+                if (result) {
+                    res.json(result)
+                } else {
+                    res.json({
+                        message: 'Records not found',
+                    });
+                }
+            }
         });
     } else {
         User.find({},function(err,data){
-            if(err)
+            if(err) {
                 res.send(err);
-            else
-                res.json(data);
+            }
+            else {
+                if (data !== "") {
+                    res.json(data)
+                } else {
+                    res.json({
+                        message: 'Records not found',
+                    });
+                }
+            }
         }).skip(skipdata).limit(limitdata);
     }
 
+});
+
+app.put("/authentication/updateuser",function(req,res){
+    var updateemail = req.query.email;
+    var updateusername = req.query.username;
+
+    if(updateemail) {
+        User.findOne({email: updateemail}, function (err, data) {
+            if (err) {
+                res.json(err);
+            }
+            else {
+                var result = data;
+                if(result){
+                    result.firstname = req.body.firstname;
+                    result.lastname = req.body.lastname;
+                    result.username = req.body.username;
+                    result.email = req.body.email;
+                    result.save(function (err, docs) {
+                        if (err)
+                            res.send(err);
+                        else
+                            res.send(docs);
+                    });
+                } else {
+                    res.json({
+                        message: 'Record with the given email not found',
+                    });
+                }
+            }
+        });
+    } else if(updateusername){
+        User.findOne({username: updateusername}, function (err, data) {
+            if (err) {
+                res.json(err);
+            }
+            else {
+                var result = data;
+                if(result){
+                    result.firstname = req.body.firstname;
+                    result.lastname = req.body.lastname;
+                    result.username = req.body.username;
+                    result.email = req.body.email;
+                    result.save(function (err, docs) {
+                        if (err)
+                            res.send(err);
+                        else
+                            res.send(docs);
+                    });
+                } else {
+                    res.json({
+                        message: 'Record with the given username not found',
+                    });
+                }
+            }
+        });
+    } else {
+        res.json({
+            message: 'Please provide username / email',
+        });
+    }
+});
+
+app.delete("/authentication/deleteuser",function(req,res){
+    var deleteemail = req.query.email;
+    var deleteusername = req.query.username;
+    if(deleteemail) {
+        User.remove({email: deleteemail}, function (err, data) {
+            if (err) {
+                res.json(err);
+            }
+            else {
+                if(data.n) {
+                    data.message = 'Successfully deleted';
+                    res.status(200).send(data);
+                }else {
+                    res.json({
+                        message: 'Record not found',
+                    });
+                }
+            }
+        });
+    }else if (deleteusername){
+        User.remove({username: deleteusername}, function (err, data) {
+            if (err) {
+                res.json(err);
+            }
+            else {
+                if(data.n) {
+                    data.message = 'Successfully deleted';
+                    res.status(200).send(data);
+                }else {
+                    res.json({
+                        message: 'Record not found',
+                    });
+                }
+            }
+        });
+    }else {
+        res.json({
+            message: 'Please provide username / email',
+        });
+    }
 });
 
 app.post('/authenticate/user',(req,res)=>{
