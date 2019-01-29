@@ -45,3 +45,33 @@ bodyparams :
 "password" : "test12345678"
 }
 ```
+* Step 7 : To update a user account create a put method with the following URL and body params,
+
+URL : http://localhost:3000/authentication/updateuser/?username=testdata
+
+bodyparams : 
+``` r 
+{
+		    "firstname": "testput",
+        "lastname" : "dataput",
+        "username" : "testdata", // cannot be updated
+        "email"    : "testdataput@yopmail.com",
+        "currentpassword" : "12345678", 
+        "newpassword" : "87654321"
+}
+```
+
+* Step 8 : To delete a user account create a post method with the following URL,
+
+URL : http://localhost:3000/authentication/deleteuser/?username=testdata
+
+response : 
+``` r 
+{
+		 
+    "n": 1,
+    "ok": 1,
+    "message": "Successfully deleted"
+
+}
+```
