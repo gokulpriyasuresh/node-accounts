@@ -52,7 +52,7 @@ URL : http://localhost:3000/authentication/updateuser/?username=testdata
 bodyparams : 
 ``` r 
 {
-		    "firstname": "testput",
+	"firstname": "testput",
         "lastname" : "dataput",
         "username" : "testdata", // cannot be updated
         "email"    : "testdataput@yopmail.com",
