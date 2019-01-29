@@ -33,6 +33,11 @@ app.listen(3000,()=>{
     console.log('server is running on port 3000')
 
 });
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 var schema = mongoose.Schema;
 var nameSchema = schema({
     firstname: {
@@ -95,7 +100,7 @@ var User = mongoose.model("Users", nameSchema);
 app.get('/', function(req, res) {
     res.send('App server is running on http://localhost:3000/');
 });
-app.post("/authentication/createuser",function(req,res){
+app.post('/authentication/createuser/',(req,res) => {
     var u = new User({
         firstname:req.body.firstname,
         lastname:req.body.lastname,
@@ -106,10 +111,15 @@ app.post("/authentication/createuser",function(req,res){
     u.password = u.generateHash(req.body.password);
 
     u.save(function(err){
-        if(err)
+        if(err) {
             res.send(err);
-        else
-            res.send("Successfully inserted");
+        }
+        else {
+            res.json({
+                message: 'User Account created successfully.',
+                code: 200,
+            });
+        }
     });
 
 });
@@ -167,10 +177,9 @@ app.get("/authentication/getuser/",function(req,res){
 
 });
 
-app.put("/authentication/updateuser",function(req,res){
+app.put("/authentication/updateuser",(req,res) =>{
     var updateemail = req.query.email;
     var updateusername = req.query.username;
-
     if(updateemail) {
         User.findOne({email: updateemail}, function (err, data) {
             if (err) {
@@ -179,19 +188,40 @@ app.put("/authentication/updateuser",function(req,res){
             else {
                 var result = data;
                 if(result){
-                    result.firstname = req.body.firstname;
-                    result.lastname = req.body.lastname;
-                    result.username = req.body.username;
-                    result.email = req.body.email;
-                    result.save(function (err, docs) {
-                        if (err)
-                            res.send(err);
-                        else
-                            res.send(docs);
-                    });
+                    if(req.body.currentpassword && req.body.newpassword) {
+                        if (bcrypt.compareSync(req.body.currentpassword, result.password)) {
+                            result.firstname = req.body.firstname;
+                            result.lastname = req.body.lastname;
+                            result.username = req.body.username;
+                            result.email = req.body.email;
+                            result.password = result.generateHash(req.body.newpassword);
+                            result.save(function (err, result) {
+                                if (err) {
+                                    res.send(err);
+                                }
+                                else {
+                                    res.json({
+                                        message : "Updated Successfully",
+                                        code : 200,
+                                        data:result});
+                                }
+                            });
+                        } else {
+                            res.json({
+                                message: 'Incorrect Password',
+                                code: 400
+                            });
+                        }
+                    }else{
+                        res.json({
+                            message: 'Please provide current & new password to update your account',
+                            code: 400
+                        });
+                    }
                 } else {
                     res.json({
                         message: 'Record with the given email not found',
+                        code : 400
                     });
                 }
             }
@@ -204,19 +234,40 @@ app.put("/authentication/updateuser",function(req,res){
             else {
                 var result = data;
                 if(result){
-                    result.firstname = req.body.firstname;
-                    result.lastname = req.body.lastname;
-                    result.username = req.body.username;
-                    result.email = req.body.email;
-                    result.save(function (err, docs) {
-                        if (err)
-                            res.send(err);
-                        else
-                            res.send(docs);
-                    });
+                    if(req.body.currentpassword && req.body.newpassword) {
+                        if (bcrypt.compareSync(req.body.currentpassword, result.password)) {
+                            result.firstname = req.body.firstname;
+                            result.lastname = req.body.lastname;
+                            result.username = req.body.username;
+                            result.email = req.body.email;
+                            result.password = result.generateHash(req.body.newpassword);
+                            result.save(function (err, result) {
+                                if (err) {
+                                    res.send(err);
+                                }
+                                else {
+                                    res.json({
+                                        message : "Updated Successfully",
+                                        code : 200,
+                                        data:result});
+                                }
+                            });
+                        } else {
+                            res.json({
+                                message: 'Incorrect Password',
+                                code: 400
+                            });
+                        }
+                    }else{
+                        res.json({
+                            message: 'Please provide current & new password to update your account',
+                            code: 400
+                        });
+                    }
                 } else {
                     res.json({
                         message: 'Record with the given username not found',
+                        code : 400
                     });
                 }
             }
@@ -224,6 +275,7 @@ app.put("/authentication/updateuser",function(req,res){
     } else {
         res.json({
             message: 'Please provide username / email',
+            code : 400
         });
     }
 });
@@ -232,7 +284,7 @@ app.delete("/authentication/deleteuser",function(req,res){
     var deleteemail = req.query.email;
     var deleteusername = req.query.username;
     if(deleteemail) {
-        User.remove({email: deleteemail}, function (err, data) {
+        User.deleteOne({email: deleteemail}, function (err, data) {
             if (err) {
                 res.json(err);
             }
@@ -248,7 +300,7 @@ app.delete("/authentication/deleteuser",function(req,res){
             }
         });
     }else if (deleteusername){
-        User.remove({username: deleteusername}, function (err, data) {
+        User.deleteOne({username: deleteusername}, function (err, data) {
             if (err) {
                 res.json(err);
             }
@@ -271,17 +323,18 @@ app.delete("/authentication/deleteuser",function(req,res){
 });
 
 app.post('/authenticate/user',(req,res)=>{
+
     var qusername = req.body.username;
     var qemail = req.body.email;
     var qpassword = req.body.password;
 
     if(qusername && qpassword){
-        User.find({username:qusername},function(err,data){
+        User.findOne({username:qusername},function(err,data){
             if(err) {
                 res.send(err);
             }
             else {
-                var result = data[0];
+                var result = data;
                 if (result){
                             if(bcrypt.compareSync(qpassword, result.password)){
                                 const payload = {
@@ -296,7 +349,8 @@ app.post('/authenticate/user',(req,res)=>{
 
                                 res.json({
                                     message: 'authentication done ',
-                                    token: token
+                                    token: token,
+                                    userdetails : result,
                                 });
                             }else{
                                 res.json({
@@ -311,12 +365,12 @@ app.post('/authenticate/user',(req,res)=>{
             }
         });
     }else if(qemail && qpassword){
-        User.find({email:qemail},function(err,data){
+        User.findOne({email:qemail},function(err,data){
             if(err) {
                 res.send(err);
             }
             else {
-                var result = data[0];
+                var result = data;
                 if (result){
                     if(bcrypt.compareSync(qpassword, result.password)){
                         const payload = {
@@ -331,7 +385,8 @@ app.post('/authenticate/user',(req,res)=>{
 
                         res.json({
                             message: 'authentication done ',
-                            token: token
+                            token: token,
+                            userdetails : result,
                         });
                     }else{
                         res.json({
