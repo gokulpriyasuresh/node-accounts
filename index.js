@@ -6,14 +6,28 @@ let    config = require('./config');
 let    app = express();
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: true }));
+let nodemailer = require("nodemailer");
+let mg = require('nodemailer-mailgun-transport');
 let mongoose = require("mongoose");
 let uniqueValidator = require('mongoose-unique-validator');
 let Validator = require('schema-validator');
 let MongoClient =    require('mongodb').MongoClient;
     //mongoose.Promise = global.Promise;
-    mongoose.connect("mongodb://localhost:27017/Accounts",{ useNewUrlParser: true , useCreateIndex: true } );
+mongoose.connect("mongodb://localhost:27017/Accounts",{ useNewUrlParser: true , useCreateIndex: true } );
 let db = mongoose.connection;
 var bcrypt = require('bcrypt-nodejs');
+
+
+let smtpTransport = nodemailer.createTransport({
+    service: "Gmail",
+    port: 587,
+    secure: false,
+    host: "smtp.gmail.com",
+    auth: {
+        user: "nodejsmailertestacc@gmail.com",
+        pass: "NODEtest12345678"
+    }
+});
 
 
 //set secret
@@ -405,6 +419,31 @@ app.post('/authenticate/user',(req,res)=>{
             message: 'Please provide username / email and password',
         });
     }
+});
+
+app.post('/send',function(req,res){
+    var mailOptions={
+        from: req.body.from,
+        to : req.body.to,
+        subject : req.body.subject,
+        text : req.body.text
+    }
+    console.log(mailOptions);
+    smtpTransport.sendMail(mailOptions, function(error, response){
+        if(error){
+            console.log(error);
+            res.json({
+                message: 'Mail sending failed',
+                code: 400,
+            });
+        }else{
+            console.log("Message sent: " + JSON.stringify(response));
+            res.json({
+                message: 'Mail sent successfully',
+                code: 200,
+            });
+        }
+    });
 });
 
 
